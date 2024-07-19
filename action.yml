@@ -57,15 +57,24 @@ runs:
         run_install: false
         package_json_file: ${{ inputs.workingDirectory }}/package.json
 
-    - name: setup node
-      uses: actions/setup-node@v4
+    # - name: setup node
+    #   uses: actions/setup-node@v4
+    #   with:
+    #     node-version: ${{ inputs.nodeVersion }}
+    #     cache: ${{ inputs.packageManager }}
+    #     cache-dependency-path: |
+    #       **/pnpm-lock.yaml
+    #       **/yarn.lock
+    #       patches/**
+
+    - name: Restore cached npm dependencies
+      id: cache-dependencies-restore
+      uses: actions/cache/restore@v3
       with:
-        node-version: ${{ inputs.nodeVersion }}
-        cache: ${{ inputs.packageManager }}
-        cache-dependency-path: |
-          **/pnpm-lock.yaml
-          **/yarn.lock
-          patches/**
+        path: |
+          node_modules
+          ~/.cache/Cypress # needed for the Cypress binary
+        key: npm-dependencies-${{ hashFiles('pnpm-lock.yaml') }}
 
     - name: Install yarn package manager
       shell: bash
@@ -98,10 +107,19 @@ runs:
       with:
         registry-url: https://registry.npmjs.org/
         node-version-file: .github/.nvmrc
-        cache: pnpm
-        cache-dependency-path: pnpm-lock.yaml
+        # cache: pnpm
+        # cache-dependency-path: pnpm-lock.yaml
 
     - name: Setup pnpm config registry
       if: inputs.packageManager == 'pnpm'
       run: pnpm config set registry https://registry.npmjs.org
       shell: bash
+
+    - name: Cache npm dependencies
+      id: cache-dependencies-save
+      uses: actions/cache/save@v3
+      with:
+        path: |
+          node_modules
+          ~/.cache/Cypress # needed for the Cypress binary
+        key: ${{ steps.cache-dependencies-restore.outputs.cache-primary-key }}
