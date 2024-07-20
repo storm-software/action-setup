@@ -52,10 +52,10 @@ runs:
         fetch-depth: 0
         token: ${{ inputs.stormBotGitHubToken }}
 
-    - name: Install pnpm package manager
+    - name: Start Nx Cloud CI run
       shell: bash
       if: inputs.packageManager == 'pnpm'
-      run: pnpm exec nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e-ci"
+      run: pnpm nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"
       working-directory: ${{ inputs.workingDirectory }}
 
     - name: Check pnpm version
