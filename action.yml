@@ -4,6 +4,11 @@
 name: "Storm Software - Setup"
 description: "A composite action configuration used across many Storm Software repos to setup: checkout, Node.js, a package manager, and npm registry configuration."
 author: "sullivanpj"
+
+branding:
+  icon: "package"
+  color: "gray-dark"
+
 inputs:
   workingDirectory:
     description: "The working directory of your node package"
@@ -21,15 +26,37 @@ inputs:
     description: The github username of the Storm bot
     required: false
     default: ""
+  stormBotGitHubToken:
+    description: The github token of the Storm bot
+    required: true
+    default: ""
 
 runs:
   using: "composite"
   steps:
-    - name: Cancel Previous Runs
-      uses: styfle/cancel-workflow-action@0.12.1
-      continue-on-error: true
+    - uses: actions/checkout@v4
+      name: Checkout [Pull Request]
+      if: ${{ github.event_name == 'pull_request' }}
       with:
-        access_token: ${{ github.token }}
+        # By default, PRs will be checked-out based on the Merge Commit, but we want the actual branch HEAD.
+        ref: ${{ github.event.pull_request.head.sha }}
+        # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+        fetch-depth: 0
+        token: ${{ inputs.stormBotGitHubToken }}
+
+    - uses: actions/checkout@v4
+      name: Checkout [Default Branch]
+      if: ${{ github.event_name != 'pull_request' }}
+      with:
+        # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+        fetch-depth: 0
+        token: ${{ inputs.stormBotGitHubToken }}
+
+    - name: Install pnpm package manager
+      shell: bash
+      if: inputs.packageManager == 'pnpm'
+      run: pnpm exec nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml" --stop-agents-after="e2e-ci"
+      working-directory: ${{ inputs.workingDirectory }}
 
     - name: Check pnpm version
       shell: bash
@@ -107,8 +134,8 @@ runs:
       with:
         registry-url: https://registry.npmjs.org/
         node-version-file: .github/.nvmrc
-        # cache: pnpm
-        # cache-dependency-path: pnpm-lock.yaml
+        cache: pnpm
+        cache-dependency-path: pnpm-lock.yaml
 
     - name: Setup pnpm config registry
       if: inputs.packageManager == 'pnpm'
@@ -123,3 +150,15 @@ runs:
           node_modules
           ~/.cache/Cypress # needed for the Cypress binary
         key: ${{ steps.cache-dependencies-restore.outputs.cache-primary-key }}
+
+    - name: Configure git
+      run: |
+        git config user.name "${{ inputs.stormBot }}"
+        git config user.email "${{ inputs.stormBot }}@users.noreply.github.com"
+        git config lfs.allowincompletepush true
+        npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+      shell: bash
+      
+    - name: Track the default branch
+      run: git branch --track main origin/main
+      shell: bash
