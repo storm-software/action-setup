@@ -78,17 +78,17 @@ runs:
         run_install: false
         package_json_file: ${{ inputs.workingDirectory }}/package.json
 
-    - name: Install Nx-Cloud CLI
-      shell: bash
-      if: inputs.packageManager == 'pnpm'
-      run: pnpm i nx-cloud -g
-      working-directory: ${{ inputs.workingDirectory }}
+    # - name: Install Nx-Cloud CLI
+    #   shell: bash
+    #   if: inputs.packageManager == 'pnpm'
+    #   run: pnpm i nx-cloud -g
+    #   working-directory: ${{ inputs.workingDirectory }}
 
-    - name: Start Nx Cloud CI run
-      shell: bash
-      if: inputs.packageManager == 'pnpm'
-      run: pnpm exec nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"
-      working-directory: ${{ inputs.workingDirectory }}
+    # - name: Start Nx Cloud CI run
+    #   shell: bash
+    #   if: inputs.packageManager == 'pnpm'
+    #   run: pnpm exec nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"
+    #   working-directory: ${{ inputs.workingDirectory }}
 
     # - name: setup node
     #   uses: actions/setup-node@v4
