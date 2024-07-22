@@ -87,7 +87,7 @@ runs:
     - name: Start Nx Cloud CI run
       shell: bash
       if: inputs.packageManager == 'pnpm'
-      run: pnpm nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"
+      run: pnpm exec nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"
       working-directory: ${{ inputs.workingDirectory }}
 
     # - name: setup node
@@ -166,7 +166,7 @@ runs:
         npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
       shell: bash
       
-    - name: Track the default branch
-      run: git branch --track main origin/main
-      shell: bash
+    # - name: Track the default branch
+    #   run: git branch --track main origin/main
+    #   shell: bash
 
