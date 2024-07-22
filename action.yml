@@ -52,12 +52,6 @@ runs:
         fetch-depth: 0
         token: ${{ inputs.stormBotGitHubToken }}
 
-    - name: Start Nx Cloud CI run
-      shell: bash
-      if: inputs.packageManager == 'pnpm'
-      run: pnpm nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"
-      working-directory: ${{ inputs.workingDirectory }}
-
     - name: Check pnpm version
       shell: bash
       id: pnpm
@@ -83,6 +77,12 @@ runs:
         version: ${{ steps.pnpm.outputs.version }}
         run_install: false
         package_json_file: ${{ inputs.workingDirectory }}/package.json
+
+    - name: Start Nx Cloud CI run
+      shell: bash
+      if: inputs.packageManager == 'pnpm'
+      run: pnpm nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"
+      working-directory: ${{ inputs.workingDirectory }}
 
     # - name: setup node
     #   uses: actions/setup-node@v4
