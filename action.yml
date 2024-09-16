@@ -10,26 +10,25 @@ branding:
   color: "gray-dark"
 
 inputs:
-  workingDirectory:
+  working-directory:
     description: "The working directory of your node package"
     required: false
     default: ./
-  packageManager:
+  package-manager:
     description: Package manager
-    required: false
+    required: true
     default: pnpm
-  packageManagerVersion:
+  package-manager-version:
     description: Package manager version
-    required: false
-    default: 8.10.2
-  stormBot:
+    required: true
+    default: 9.10.0
+  storm-bot:
     description: The github username of the Storm bot
-    required: false
-    default: ""
-  stormBotGitHubToken:
+    required: true
+    default: Stormie-Bot
+  storm-bot-github-token:
     description: The github token of the Storm bot
     required: true
-    default: ""
 
 runs:
   using: "composite"
@@ -42,7 +41,7 @@ runs:
         ref: ${{ github.event.pull_request.head.sha }}
         # We need to fetch all branches and commits so that Nx affected has a base to compare against.
         fetch-depth: 0
-        token: ${{ inputs.stormBotGitHubToken }}
+        token: ${{ inputs.storm-bot-github-token }}
 
     - uses: actions/checkout@v4
       name: Checkout [Default Branch]
@@ -50,51 +49,51 @@ runs:
       with:
         # We need to fetch all branches and commits so that Nx affected has a base to compare against.
         fetch-depth: 0
-        token: ${{ inputs.stormBotGitHubToken }}
+        token: ${{ inputs.storm-bot-github-token }}
 
     - name: Check pnpm version
       shell: bash
       id: pnpm
-      if: inputs.packageManager == 'pnpm'
-      working-directory: ${{ inputs.workingDirectory }}
+      if: inputs.package-manager == 'pnpm'
+      working-directory: ${{ inputs.working-directory }}
       run: |
         PNPM_VERSION=${PNPM_VERSION:-7.30.5}
-        PKG_JSON=$(cat package.json | jq -r '.packageManager' | awk -F@ '{print $2}')
+        PKG_JSON=$(cat package.json | jq -r '.package-manager' | awk -F@ '{print $2}')
         if [ ! -z $PKG_JSON ]; then
           PNPM_VERSION=$PKG_JSON
         fi
-        if [ ! -z {{inputs.packageManager}} ]; then
-          PNPM_VERSION=${{ inputs.packageManagerVersion }}
+        if [ ! -z {{inputs.package-manager}} ]; then
+          PNPM_VERSION=${{ inputs.package-manager-version }}
         fi
         echo "Using PNPM version $PNPM_VERSION"
         echo "version=$PNPM_VERSION" >> $GITHUB_OUTPUT
 
-    - name: Setup ${{ inputs.packageManager }}
+    - name: Setup ${{ inputs.package-manager }}
       id: pnpm_setup
-      if: inputs.packageManager == 'pnpm'
+      if: inputs.package-manager == 'pnpm'
       uses: pnpm/action-setup@v4.0.0
       with:
         version: ${{ steps.pnpm.outputs.version }}
         run_install: false
-        package_json_file: ${{ inputs.workingDirectory }}/package.json
+        package_json_file: ${{ inputs.working-directory }}/package.json
 
     # - name: Install Nx-Cloud CLI
     #   shell: bash
-    #   if: inputs.packageManager == 'pnpm'
+    #   if: inputs.package-manager == 'pnpm'
     #   run: pnpm i nx-cloud -g
-    #   working-directory: ${{ inputs.workingDirectory }}
+    #   working-directory: ${{ inputs.working-directory }}
 
     # - name: Start Nx Cloud CI run
     #   shell: bash
-    #   if: inputs.packageManager == 'pnpm'
+    #   if: inputs.package-manager == 'pnpm'
     #   run: pnpm exec nx-cloud start-ci-run --distribute-on=".nx/workflows/dynamic-changesets.yaml"
-    #   working-directory: ${{ inputs.workingDirectory }}
+    #   working-directory: ${{ inputs.working-directory }}
 
     # - name: setup node
     #   uses: actions/setup-node@v4
     #   with:
     #     node-version: ${{ inputs.nodeVersion }}
-    #     cache: ${{ inputs.packageManager }}
+    #     cache: ${{ inputs.package-manager }}
     #     cache-dependency-path: |
     #       **/pnpm-lock.yaml
     #       **/yarn.lock
@@ -111,24 +110,24 @@ runs:
 
     - name: Install yarn package manager
       shell: bash
-      if: inputs.packageManager == 'yarn' && inputs.packageManagerVersion == ''
+      if: inputs.package-manager == 'yarn' && inputs.package-manager-version == ''
       run: yarn install --ignore-engines --frozen-lockfile --immutable
-      working-directory: ${{ inputs.workingDirectory }}
+      working-directory: ${{ inputs.working-directory }}
 
     - name: Install modern yarn package manager
       shell: bash
-      if: inputs.packageManager == 'yarn' && inputs.packageManagerVersion == 'modern'
+      if: inputs.package-manager == 'yarn' && inputs.package-manager-version == 'modern'
       run: corepack enable && yarn
-      working-directory: ${{ inputs.workingDirectory }}
+      working-directory: ${{ inputs.working-directory }}
 
     - name: Install pnpm package manager
       shell: bash
-      if: inputs.packageManager == 'pnpm'
+      if: inputs.package-manager == 'pnpm'
       run: pnpm install --no-frozen-lockfile
-      working-directory: ${{ inputs.workingDirectory }}
+      working-directory: ${{ inputs.working-directory }}
 
     - name: Get pnpm store directory
-      if: inputs.packageManager == 'pnpm'
+      if: inputs.package-manager == 'pnpm'
       shell: bash
       id: pnpm-cache
       run: |
@@ -136,7 +135,7 @@ runs:
 
     - name: Set up npm registry
       uses: actions/setup-node@v4
-      if: inputs.packageManager == 'pnpm'
+      if: inputs.package-manager == 'pnpm'
       with:
         registry-url: https://registry.npmjs.org/
         node-version-file: .github/.nvmrc
@@ -144,7 +143,7 @@ runs:
         cache-dependency-path: pnpm-lock.yaml
 
     - name: Setup pnpm config registry
-      if: inputs.packageManager == 'pnpm'
+      if: inputs.package-manager == 'pnpm'
       run: pnpm config set registry https://registry.npmjs.org
       shell: bash
 
@@ -159,8 +158,8 @@ runs:
 
     - name: Configure git
       run: |
-        git config user.name "${{ inputs.stormBot }}"
-        git config user.email "${{ inputs.stormBot }}@users.noreply.github.com"
+        git config user.name "${{ inputs.storm-bot }}"
+        git config user.email "${{ inputs.storm-bot }}@users.noreply.github.com"
         git config lfs.allowincompletepush true
         git config --global init.defaultBranch main
         npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
