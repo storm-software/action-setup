@@ -22,6 +22,10 @@ inputs:
     description: Package manager version
     required: true
     default: 9.10.0
+  ignore-scripts:
+    description: Whether to ignore scripts during installation
+    required: true
+    default: N
   storm-bot:
     description: The github username of the Storm bot
     required: true
@@ -122,8 +126,14 @@ runs:
 
     - name: Install pnpm package manager
       shell: bash
-      if: inputs.package-manager == 'pnpm'
+      if: inputs.package-manager == 'pnpm' && inputs.ignore-scripts != 'Y' && inputs.ignore-scripts != 'y'
       run: pnpm install --no-frozen-lockfile
+      working-directory: ${{ inputs.working-directory }}
+
+    - name: Install pnpm package manager - Ignore scripts
+      shell: bash
+      if: inputs.package-manager == 'pnpm' && (inputs.ignore-scripts == 'Y' || inputs.ignore-scripts == 'y')
+      run: pnpm install --no-frozen-lockfile --ignore-scripts
       working-directory: ${{ inputs.working-directory }}
 
     - name: Get pnpm store directory
