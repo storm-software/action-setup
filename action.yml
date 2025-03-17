@@ -184,6 +184,7 @@ runs:
     - name: Configure npm
       run: |
         npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+        npm config set provenance true
       shell: bash
 
     # - name: Track the default branch
