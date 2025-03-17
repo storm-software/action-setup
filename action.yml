@@ -10,6 +10,12 @@ branding:
   color: "gray-dark"
 
 inputs:
+  gpg-sign-key:
+    description: "GPG sign key"
+    required: true
+  gpg-passphrase:
+    description: "GPG Passphrase"
+    required: true
   working-directory:
     description: "The working directory of your node package"
     required: false
@@ -170,11 +176,75 @@ runs:
           ~/.cache/Cypress # needed for the Cypress binary
         key: ${{ steps.cache-dependencies-restore.outputs.cache-primary-key }}
 
+    - name: Configure GPG Agent
+      shell: sh
+      run: |
+        if [ -f /usr/lib/systemd/user/gpg-agent.service ]; then
+          mkdir -p ~/.gnupg
+          if [ -f ~/.gnupg/gpg-agent.conf ]; then
+            TEMP_GPG_CONF=$(mktemp)
+            # awk magic merging config files together, overriding duplicate
+            awk 'NR==FNR{a[$1];if(NF&&$0!~/^#/) print $0;next} !($1 in a) && $1!~/^#/' \
+              ${GITHUB_ACTION_PATH}/config/gpg-agent.conf \
+              ~/.gnupg/gpg-agent.conf \
+              > ${TEMP_GPG_CONF}
+            mv ${TEMP_GPG_CONF} ~/.gnupg/gpg-agent.conf
+          else
+            cp ${GITHUB_ACTION_PATH}/config/gpg-agent.conf ~/.gnupg/gpg-agent.conf
+          fi
+          chmod 600 ~/.gnupg/*
+          chmod 700 ~/.gnupg
+          systemctl --user restart gpg-agent
+        else
+          gpg-agent --daemon \
+            --allow-preset-passphrase \
+            --default-cache-ttl 60 \
+            --max-cache-ttl 60
+        fi
+
+    - name: Import GPG Key
+      shell: sh
+      run: |
+        echo ${{ inputs.gpg-passphrase }} > passfile
+        echo -n ${{ inputs.gpg-sign-key }} | base64 --decode > signkey
+        gpg --pinentry-mode loopback \
+          --passphrase-file passfile \
+          --import signkey
+        rm passfile signkey
+        GPG_FINGERPRINT=$( \
+          gpg -K --with-fingerprint \
+          | sed -n 4p \
+          | sed -e 's/ *//g' \
+        )
+        echo "${GPG_FINGERPRINT}:6:" | gpg --import-ownertrust
+
+    - name: Preset Passphrase In GPG Agent
+      shell: sh
+      run: |
+        GPG_KEYGRIP=`gpg --with-keygrip -K \
+          | sed -n '/[S]/{n;p}' \
+          | sed 's/Keygrip = //' \
+          | sed 's/ *//g'`
+        GPG_PASSPHRASE_HEX=`echo -n ${{ inputs.gpg-passphrase }} \
+          | od -A n -t x1 \
+          | tr -d ' ' | tr -d '\n'`
+        echo "PRESET_PASSPHRASE $GPG_KEYGRIP -1 $GPG_PASSPHRASE_HEX" \
+          | gpg-connect-agent
+
+
     - name: Configure git
       run: |
+        export SIGNING_KEY=$( \
+          gpg --list-signatures --with-colons \
+          | grep 'sig' \
+          | grep ${{ inputs.git-email }} \
+          | head -n 1 \
+          | cut -d':' -f5 \
+        )
+
         git config user.name "${{ inputs.storm-bot-name }}""
         git config user.email "${{ inputs.storm-bot-email }}""
-        git config user.signingkey 16E73E594CBF8577
+        git config user.signingkey $SIGNING_KEY
         git config commit.gpgsign true
         git config tag.gpgSign true
         git config lfs.allowincompletepush true
