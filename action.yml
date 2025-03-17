@@ -189,7 +189,7 @@ runs:
       run: |
         git config user.name "${{ inputs.storm-bot-name }}"
         git config user.email "${{ inputs.storm-bot-email }}"
-        git config user.signingkey ${{ gpg-sign-key }}
+        git config user.signingkey ${{ inputs.gpg-sign-key }}
         git config commit.gpgsign true
         git config tag.gpgSign true
         git config lfs.allowincompletepush true
