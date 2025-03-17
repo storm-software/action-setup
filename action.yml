@@ -180,7 +180,7 @@ runs:
         key: ${{ steps.cache-dependencies-restore.outputs.cache-primary-key }}
 
     - name: Setup GPG
-      uses: crazy-max/ghaction-import-gpg@v5
+      uses: crazy-max/ghaction-import-gpg@v6
       with:
         gpg_private_key: ${{ inputs.gpg-private-key }}
         passphrase: ${{ inputs.gpg-passphrase }}
