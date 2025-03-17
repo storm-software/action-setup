@@ -21,7 +21,7 @@ inputs:
   package-manager-version:
     description: Package manager version
     required: true
-    default: 9.10.0
+    default: 10.3.0
   ignore-scripts:
     description: Whether to ignore scripts during installation
     required: true
@@ -178,10 +178,14 @@ runs:
         git config commit.gpgsign true
         git config tag.gpgSign true
         git config lfs.allowincompletepush true
-        git config --global init.defaultBranch main
-        npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+        git config init.defaultBranch main
       shell: bash
       
+    - name: Configure npm
+      run: |
+        npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
+      shell: bash
+
     # - name: Track the default branch
     #   run: git branch --track main origin/main
     #   shell: bash
