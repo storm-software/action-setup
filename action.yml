@@ -26,10 +26,14 @@ inputs:
     description: Whether to ignore scripts during installation
     required: true
     default: N
-  storm-bot:
-    description: The github username of the Storm bot
+  storm-bot-name:
+    description: The username of the Storm bot
     required: true
-    default: Stormie-Bot
+    default: stormie-bot
+  storm-bot-email:
+    description: The email associated with the Storm bot
+    required: true
+    default: bot@stormsoftware.com
   storm-bot-github-token:
     description: The github token of the Storm bot
     required: true
@@ -168,8 +172,11 @@ runs:
 
     - name: Configure git
       run: |
-        git config user.name "${{ inputs.storm-bot }}"
-        git config user.email "bot@stormsoftware.com"
+        git config user.name "${{ inputs.storm-bot-name }}""
+        git config user.email "${{ inputs.storm-bot-email }}""
+        git config user.signingkey 16E73E594CBF8577
+        git config commit.gpgsign true
+        git config tag.gpgSign true
         git config lfs.allowincompletepush true
         git config --global init.defaultBranch main
         npm config set //registry.npmjs.org/:_authToken=$NPM_TOKEN
