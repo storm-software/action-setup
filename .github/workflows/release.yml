@@ -3,9 +3,8 @@ on:
   push:
     branches:
       - "main"
-      - "next"
-      - "alpha"
-      - "beta"
+      - "canary"
+      - "experimental"
     tags:
       - "v*.*.*"
   pull_request:
