@@ -68,6 +68,18 @@ runs:
         fetch-depth: 0
         token: ${{ inputs.storm-bot-github-token }}
 
+    - name: Setup Node.js
+      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+      if: inputs.package-manager == 'pnpm'
+      with:
+        registry-url: https://registry.npmjs.org/
+        node-version-file: .github/.nvmrc
+        cache: ${{ inputs.package-manager }}
+        cache-dependency-path: |
+          **/pnpm-lock.yaml
+          **/yarn.lock
+          patches/**
+
     - name: Check pnpm version
       shell: bash
       id: pnpm
@@ -155,15 +167,6 @@ runs:
       id: pnpm-cache
       run: |
         echo "pnpm_cache_dir=$(pnpm store path)" >> $GITHUB_OUTPUT
-
-    - name: Set up npm registry
-      uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-      if: inputs.package-manager == 'pnpm'
-      with:
-        registry-url: https://registry.npmjs.org/
-        node-version-file: .github/.nvmrc
-        cache: pnpm
-        cache-dependency-path: pnpm-lock.yaml
 
     - name: Setup pnpm config registry
       if: inputs.package-manager == 'pnpm'
