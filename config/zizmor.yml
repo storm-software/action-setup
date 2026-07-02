@@ -1,0 +1,19 @@
+rules:
+  dangerous-triggers:
+    ignore:
+      - greetings.yml:3:1
+  unpinned-uses:
+    ignore:
+      - release.yml
+      - security.yml
+      - schedule-stale.yml
+  excessive-permissions:
+    ignore:
+      - zizmor.yml
+      - sync-labels.yml
+      - lock.yml
+      - git-guardian.yml
+      - release.yml
+  archived-uses:
+    ignore:
+      - release.yml:110:15
