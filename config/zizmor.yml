@@ -5,6 +5,7 @@ rules:
   unpinned-uses:
     ignore:
       - release.yml
+      - on-push-create-release.yml
       - security.yml
       - schedule-stale.yml
   excessive-permissions:
@@ -16,4 +17,5 @@ rules:
       - release.yml
   archived-uses:
     ignore:
-      - release.yml:110:15
+      - release.yml
+      - on-push-create-release.yml

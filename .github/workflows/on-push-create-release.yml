@@ -2,23 +2,40 @@ name: Create new release
 on:
   workflow_call:
     secrets:
-      PAT:
+      STORM_BOT_GITHUB_TOKEN:
+        required: false
+      GITHUB_TOKEN:
         required: false
 
 jobs:
   CreateRelease:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Checkout [Pull Request]
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        if: ${{ github.event_name == 'pull_request' }}
         with:
-          token: ${{ secrets.PAT }}
+          # By default, PRs will be checked-out based on the Merge Commit, but we want the actual branch HEAD.
+          ref: ${{ github.event.pull_request.head.sha }}
+          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+          fetch-depth: 0
+          token: ${{ secrets.STORM_BOT_GITHUB_TOKEN }}
+          persist-credentials: false
+
+      - name: Checkout `main` branch
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        if: ${{ github.event_name != 'pull_request' }}
+        with:
+          # We need to fetch all branches and commits so that Nx affected has a base to compare against.
+          fetch-depth: 0
+          token: ${{ secrets.STORM_BOT_GITHUB_TOKEN }}
+          persist-credentials: false
 
       - name: Bump version and push tag
         id: tag_version
-        uses: mathieudutour/github-tag-action@v6.1
+        uses: mathieudutour/github-tag-action@a22cf08638b34d5badda920f9daf6e72c477b07b # v6.2
         with:
-          github_token: ${{ secrets.PAT }}
+          github_token: ${{ secrets.STORM_BOT_GITHUB_TOKEN }}
           tag_prefix: "v"
           dry_run: true
           default_bump: false
