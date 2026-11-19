@@ -65,10 +65,10 @@
     "zx": "catalog:",
     "unrs-resolver": "catalog:"
   },
-  "packageManager": "pnpm@11.9.0",
+  "packageManager": "pnpm@11.28.13",
   "engines": {
-    "node": ">=24.16.0",
-    "pnpm": ">=11.9.0"
+    "node": ">=24.22.3",
+    "pnpm": ">=11.28.13"
   },
   "triggerEmptyDevReleaseByIncrementingThisNumber": 0
 }
